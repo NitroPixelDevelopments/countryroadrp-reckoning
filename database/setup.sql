@@ -2,8 +2,8 @@
 -- Version: 1.1.0
 
 -- Create main database if not exists
-CREATE DATABASE IF NOT EXISTS `crp_reckoning` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `crp_reckoning`;
+CREATE DATABASE IF NOT EXISTS `qbcore_78b9ce` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `qbcore_78b9ce`;
 
 -- Player Security Profiles
 CREATE TABLE IF NOT EXISTS `reckoning_player_profiles` (

@@ -1,3 +1,11 @@
+-- Load config.lua if not already loaded
+Config = Config or {}
+local configFile = LoadResourceFile(GetCurrentResourceName(), "config.lua")
+if configFile then
+    local chunk = load(configFile)
+    if chunk then chunk() end
+end
+
 local QBCore = exports['qb-core']:GetCoreObject()
 
 -- Main server initialization
@@ -52,8 +60,9 @@ CreateThread(function()
         -- Global server announcement
         for playerId, player in pairs(players) do
             TriggerClientEvent('QBCore:Notify', playerId,
-                'EMERGENCY BROADCAST: All communications are now monitored. Comply with security directives.', 
-                'error', 
+                'EMERGENCY BROADCAST: All communications are now monitored. Comply with security directives.',
+                'EMERGENCY BROADCAST', -- Title argument added
+                'error',
                 10000
             )
         end
@@ -96,14 +105,14 @@ CreateThread(function()
     end)
     
     -- Status command for administrators
-    RegisterCommand('reckoningstatus', function(source, args)
+    RegisterCommand('reckoningstatus', function(source, args, rawCommand)
         local src = source
-        
+
         if not QBCore.Functions.HasPermission(src, 'admin') then
-            TriggerClientEvent('QBCore:Notify', src, 'No permission', 'error')
+            TriggerClientEvent('QBCore:Notify', src, 'No permission', 'error', 5000)
             return
         end
-        
+
         local status = {
             tunnelSystem = Config.TunnelSystem.enabled,
             blacklineEvents = Config.BlacklineEvents.enabled,
@@ -112,7 +121,9 @@ CreateThread(function()
             accessControl = Config.AccessControl.enabled,
             milestones = milestoneProgress
         }
-        
+
+        print('[reckoningstatus] Sending status:', json.encode(status)) -- Debug print
+
         TriggerClientEvent('crp-reckoning:server:showStatus', src, status)
     end)
     

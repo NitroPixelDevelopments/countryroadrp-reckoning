@@ -143,6 +143,7 @@ CreateThread(function()
     end)
     
     RegisterNetEvent('crp-reckoning:server:showStatus', function(status)
+        print('Received status:', json.encode(status)) -- Debug print
         -- Display admin status information
         SendNUIMessage({
             type = 'showStatus',

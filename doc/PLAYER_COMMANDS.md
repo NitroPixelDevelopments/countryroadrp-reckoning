@@ -201,7 +201,7 @@ Look for:
   - `playerid`: Target player's server ID
   - `level`: Clearance level (0-4)
 
-### `/setsuspicion [playerid] [level]`
+### `/  [playerid] [level]`
 - **Description**: Set player's suspicion level
 - **Usage**: `/setsuspicion 1 75`
 - **Parameters**:

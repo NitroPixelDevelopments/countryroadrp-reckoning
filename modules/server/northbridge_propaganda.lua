@@ -156,7 +156,7 @@ RegisterCommand('northbridgeannounce', function(source, args)
     local src = source
     
     -- Check permissions
-    if not QBCore.Functions.HasPermission(src, 'admin') then
+    if not QBCore.Functions.HasPermission(src, 'admin', 'command') then
         TriggerClientEvent('QBCore:Notify', src, 'No permission', 'error')
         return
     end

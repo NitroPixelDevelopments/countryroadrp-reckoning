@@ -222,7 +222,7 @@ function NPCHandlers.ExposeCivilian(civilian, index)
     QBCore.Functions.Notify(line, 'error', 5000)
     
     -- NPC tries to flee
-    TaskFleeToCoordAnyMeans(civilian.ped, civilian.location.coords.x, civilian.location.coords.y, civilian.location.coords.z, 3.0, 10000, false, true, true, false)
+    TaskSmartFleeCoord(civilian.ped, civilian.location.coords.x, civilian.location.coords.y, civilian.location.coords.z, 500.0, -1, true, true)
     
     -- Trigger reinforcement response
     TriggerServerEvent('crp-reckoning:npc:agentExposed', GetEntityCoords(civilian.ped))

@@ -9,6 +9,15 @@ end
 local QBCore = exports['qb-core']:GetCoreObject()
 
 -- Main server initialization
+-- Server-wide event tracking
+local milestoneProgress = {
+    ghost_division_deployment = {
+        triggered = false,
+        triggerCount = 0,
+        requiredTriggers = 5
+    }
+}
+
 CreateThread(function()
     while GetResourceState('qb-core') ~= 'started' do
         Wait(1000)
@@ -16,15 +25,6 @@ CreateThread(function()
     
     -- Initialize main server systems
     print('^2[Country Road RP - Reckoning]^7 Starting Season 1 narrative systems...')
-    
-    -- Server-wide event tracking
-    local milestoneProgress = {
-        ghost_division_deployment = {
-            triggered = false,
-            triggerCount = 0,
-            requiredTriggers = 5
-        }
-    }
     
     -- Server event handlers
     RegisterNetEvent('crp-reckoning:server:triggerMilestone', function(milestoneName)
@@ -61,7 +61,6 @@ CreateThread(function()
         for playerId, player in pairs(players) do
             TriggerClientEvent('QBCore:Notify', playerId,
                 'EMERGENCY BROADCAST: All communications are now monitored. Comply with security directives.',
-                'EMERGENCY BROADCAST', -- Title argument added
                 'error',
                 10000
             )

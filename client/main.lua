@@ -151,18 +151,18 @@ CreateThread(function()
     end)
     
     RegisterNetEvent('crp-reckoning:security:setWaypoint', function(coords)
-        SetNewWaypoint(coords.x, coords.y)
+        SetNewWaypoint(coords.x, coords.y, coords.z)
         QBCore.Functions.Notify('Security waypoint set.', 'primary')
     end)
     
     RegisterNetEvent('crp-reckoning:npc:setResponseWaypoint', function(coords)
-        SetNewWaypoint(coords.x, coords.y)
+        SetNewWaypoint(coords.x, coords.y, coords.z)
         QBCore.Functions.Notify('Response location marked.', 'error')
     end)
     
     -- Debug command for testing systems
     if Config.Debug then
-        RegisterCommand('reckoningtest', function(source, args)
+        RegisterCommand('reckoningtest', function(args)
             if #args < 1 then
                 print('Usage: /reckoningtest <system>')
                 print('Available systems: tunnel, blackline, radio, npc, access')

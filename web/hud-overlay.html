@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reckoning - HUD Overlay</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: transparent;
+            color: #00ff00;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .hud-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .hud-panel {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(0, 20, 40, 0.85), rgba(0, 40, 80, 0.85));
+            border: 1px solid #00ccff;
+            border-radius: 8px;
+            padding: 10px;
+            min-width: 200px;
+            box-shadow: 0 0 20px rgba(0, 204, 255, 0.3);
+            backdrop-filter: blur(5px);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .status-panel {
+            top: 20px;
+            left: 20px;
+        }
+
+        .environment-panel {
+            top: 20px;
+            right: 20px;
+        }
+
+        .tunnel-indicator {
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            background: rgba(255, 165, 0, 0.9);
+            color: #000;
+            border-color: #ffa500;
+        }
+
+        .security-alert {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(220, 20, 60, 0.95);
+            color: #fff;
+            border-color: #dc143c;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            animation: alertPulse 1s infinite;
+        }
+
+        .resistance-broadcast {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 128, 0, 0.9);
+            color: #fff;
+            border-color: #008000;
+            text-align: center;
+            max-width: 80%;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .hud-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            align-items: center;
+        }
+
+        .hud-label {
+            color: #00ccff;
+            font-weight: bold;
+        }
+
+        .hud-value {
+            color: #fff;
+            text-align: right;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: 5px;
+        }
+
+        .status-green {
+            background-color: #00ff00;
+            box-shadow: 0 0 5px #00ff00;
+        }
+
+        .status-yellow {
+            background-color: #ffff00;
+            box-shadow: 0 0 5px #ffff00;
+        }
+
+        .status-orange {
+            background-color: #ffa500;
+            box-shadow: 0 0 5px #ffa500;
+        }
+
+        .status-red {
+            background-color: #ff0000;
+            box-shadow: 0 0 5px #ff0000;
+        }
+
+        .suspicion-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+
+        .suspicion-fill {
+            height: 100%;
+            transition: width 0.5s ease, background-color 0.5s ease;
+            border-radius: 2px;
+        }
+
+        .clearance-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #004080, #0066cc);
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+            border: 1px solid #00ccff;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .tunnel-access {
+            color: #ffa500;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .surveillance-level {
+            position: relative;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .surveillance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #ffff00, #ff0000);
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .npc-scan {
+            font-size: 10px;
+            color: #cccccc;
+        }
+
+        .npc-suspicious {
+            color: #ff6666;
+            font-weight: bold;
+        }
+
+        .restricted-zone {
+            color: #ff4444;
+            font-weight: bold;
+            animation: warningBlink 1s infinite;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .fade-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+
+        @keyframes alertPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translate(-50%, 100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        @keyframes warningBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .effect-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2000;
+        }
+
+        .tunnel-effect {
+            background: radial-gradient(circle, transparent 30%, rgba(0, 0, 0, 0.8) 70%);
+            animation: tunnelPulse 3s ease-out;
+        }
+
+        .blackline-effect {
+            background: linear-gradient(45deg, 
+                transparent 0%, 
+                rgba(255, 0, 0, 0.3) 25%, 
+                transparent 50%, 
+                rgba(255, 0, 0, 0.3) 75%, 
+                transparent 100%);
+            animation: blacklineStatic 5s ease-out;
+        }
+
+        @keyframes tunnelPulse {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes blacklineStatic {
+            0%, 100% { opacity: 0; }
+            25%, 75% { opacity: 0.8; }
+            50% { opacity: 0.4; }
+        }
+
+        .minimap-overlay {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #00ccff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            text-align: center;
+        }
+
+        .radio-frequency {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .time-display {
+            color: #88ccff;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .location-display {
+            color: #cccccc;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="hud-container" id="hudContainer">
+        <!-- Status Panel -->
+        <div class="hud-panel status-panel" id="statusPanel">
+            <div class="hud-row">
+                <span class="hud-label">CLEARANCE</span>
+                <span class="hud-value">
+                    <span class="clearance-badge" id="clearanceBadge">L0</span>
+                </span>
+            </div>
+            <div class="hud-row">
+                <span class="hud-label">SUSPICION</span>
+                <span class="hud-value" id="suspicionValue">0%</span>
+            </div>
+            <div class="suspicion-bar">
+                <div class="suspicion-fill" id="suspicionFill"></div>
+            </div>
+            <div class="hud-row">
+                <span class="hud-label">SURVEILLANCE</span>
+                <span class="hud-value" id="surveillanceLevel">None</span>
+            </div>
+            <div class="surveillance-level">
+                <div class="surveillance-fill" id="surveillanceFill"></div>
+            </div>
+        </div>
+
+        <!-- Environment Panel -->
+        <div class="hud-panel environment-panel" id="environmentPanel">
+            <div class="hud-row">
+                <span class="hud-label">TIME</span>
+                <span class="hud-value time-display" id="timeDisplay">--:--</span>
+            </div>
+            <div class="hud-row">
+                <span class="hud-label">LOCATION</span>
+                <span class="hud-value location-display" id="locationDisplay">Unknown</span>
+            </div>
+            <div class="hud-row">
+                <span class="hud-label">SECURITY</span>
+                <span class="hud-value" id="securityLevel">
+                    Level 1 <span class="status-indicator status-green"></span>
+                </span>
+            </div>
+            <div class="hud-row">
+                <span class="hud-label">RADIO</span>
+                <span class="hud-value radio-frequency" id="radioStatus">---.---</span>
+            </div>
+            <div id="npcScanResults" class="npc-scan"></div>
+        </div>
+
+        <!-- Tunnel Proximity Indicator -->
+        <div class="hud-panel tunnel-indicator hidden" id="tunnelIndicator">
+            <div class="tunnel-access">TUNNEL ACCESS POINT</div>
+            <div>Distance: <span id="tunnelDistance">--</span>m</div>
+            <div>Status: <span id="tunnelStatus">Checking...</span></div>
+        </div>
+
+        <!-- Security Alert -->
+        <div class="hud-panel security-alert hidden" id="securityAlert">
+            <div>⚠️ SECURITY ALERT ⚠️</div>
+            <div id="alertMessage">Elevated monitoring active</div>
+        </div>
+
+        <!-- Resistance Broadcast -->
+        <div class="hud-panel resistance-broadcast hidden" id="resistanceBroadcast">
+            <div>📻 RESISTANCE NETWORK</div>
+            <div id="broadcastMessage">Incoming transmission...</div>
+        </div>
+
+        <!-- Minimap Overlay -->
+        <div class="minimap-overlay" id="minimapOverlay">
+            <div>
+                <div>SECTOR STATUS</div>
+                <div id="sectorInfo">SCANNING...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Effect Overlays -->
+    <div class="effect-overlay hidden" id="effectOverlay"></div>
+
+    <script>
+        let hudVisible = true;
+        let hudConfig = {};
+        let currentPlayerData = {};
+        let currentEnvironment = {};
+
+        // Listen for NUI messages
+        window.addEventListener('message', function(event) {
+            const data = event.data;
+            
+            switch(data.type) {
+                case 'updateHUD':
+                    updateHUD(data);
+                    break;
+                case 'environmentScan':
+                    updateEnvironmentScan(data);
+                    break;
+                case 'tunnelProximity':
+                    updateTunnelProximity(data);
+                    break;
+                case 'toggleHUD':
+                    toggleHUD(data.visible);
+                    break;
+                case 'showEffect':
+                    showEffect(data.effect, data.duration);
+                    break;
+                case 'showAlert':
+                    showAlert(data.alert, data.level, data.duration);
+                    break;
+                case 'showBroadcast':
+                    showBroadcast(data.message, data.duration);
+                    break;
+            }
+        });
+
+        function updateHUD(data) {
+            if (!data.visible) return;
+            
+            hudConfig = data.config;
+            currentPlayerData = data.playerData;
+            currentEnvironment = data.environment;
+            
+            // Update status panel
+            updateStatusPanel();
+            
+            // Update environment panel
+            updateEnvironmentPanel();
+            
+            // Update visibility based on config
+            updatePanelVisibility();
+        }
+
+        function updateStatusPanel() {
+            const clearanceBadge = document.getElementById('clearanceBadge');
+            const suspicionValue = document.getElementById('suspicionValue');
+            const suspicionFill = document.getElementById('suspicionFill');
+            const surveillanceLevel = document.getElementById('surveillanceLevel');
+            const surveillanceFill = document.getElementById('surveillanceFill');
+            
+            // Update clearance
+            const clearance = currentPlayerData.clearanceLevel || 0;
+            clearanceBadge.textContent = `L${clearance}`;
+            clearanceBadge.style.background = `linear-gradient(45deg, 
+                ${getClearanceColor(clearance)}, 
+                ${getClearanceColor(clearance, true)})`;
+            
+            // Update suspicion
+            const suspicion = currentPlayerData.suspicionLevel || 0;
+            suspicionValue.textContent = `${suspicion}%`;
+            suspicionFill.style.width = `${suspicion}%`;
+            suspicionFill.style.backgroundColor = getSuspicionColor(suspicion);
+            
+            // Update surveillance
+            const surveillance = currentEnvironment.surveillance || {level: 'None', intensity: 1};
+            surveillanceLevel.textContent = surveillance.level;
+            surveillanceFill.style.width = `${surveillance.intensity * 25}%`;
+        }
+
+        function updateEnvironmentPanel() {
+            const timeDisplay = document.getElementById('timeDisplay');
+            const locationDisplay = document.getElementById('locationDisplay');
+            const securityLevel = document.getElementById('securityLevel');
+            const radioStatus = document.getElementById('radioStatus');
+            
+            // Update time
+            timeDisplay.textContent = currentEnvironment.time || '--:--';
+            
+            // Update location
+            locationDisplay.textContent = currentEnvironment.location || 'Unknown';
+            
+            // Update security level
+            const secLevel = currentEnvironment.securityLevel || 1;
+            securityLevel.innerHTML = `Level ${secLevel} <span class="status-indicator ${getSecurityIndicator(secLevel)}"></span>`;
+            
+            // Update radio status
+            const radio = currentEnvironment.systems?.radio || {};
+            if (radio.enabled) {
+                radioStatus.textContent = radio.frequency || '---.---';
+                radioStatus.className = radio.isResistance ? 'radio-frequency' : 'hud-value';
+            } else {
+                radioStatus.textContent = 'OFFLINE';
+                radioStatus.className = 'hud-value';
+            }
+        }
+
+        function updateEnvironmentScan(data) {
+            const npcScanResults = document.getElementById('npcScanResults');
+            
+            let scanText = '';
+            
+            // NPC scan results
+            if (data.npcs && data.npcs.length > 0) {
+                const suspiciousNPCs = data.npcs.filter(npc => npc.isSuspicious);
+                if (suspiciousNPCs.length > 0) {
+                    scanText += `<div class="npc-suspicious">⚠️ ${suspiciousNPCs.length} SUSPICIOUS NPC(s)</div>`;
+                } else {
+                    scanText += `<div>${data.npcs.length} civilian(s) nearby</div>`;
+                }
+            }
+            
+            // Restricted zones
+            if (data.restrictedZones && data.restrictedZones.length > 0) {
+                data.restrictedZones.forEach(zone => {
+                    scanText += `<div class="restricted-zone">🚫 ${zone.name}</div>`;
+                });
+            }
+            
+            npcScanResults.innerHTML = scanText;
+        }
+
+        function updateTunnelProximity(data) {
+            const tunnelIndicator = document.getElementById('tunnelIndicator');
+            const tunnelDistance = document.getElementById('tunnelDistance');
+            const tunnelStatus = document.getElementById('tunnelStatus');
+            
+            if (data.nearestTunnel) {
+                tunnelIndicator.classList.remove('hidden');
+                tunnelDistance.textContent = Math.round(data.nearestTunnel.distance);
+                tunnelStatus.textContent = data.nearestTunnel.canAccess ? 'ACCESS GRANTED' : 'ACCESS DENIED';
+                tunnelStatus.style.color = data.nearestTunnel.canAccess ? '#00ff00' : '#ff0000';
+            } else {
+                tunnelIndicator.classList.add('hidden');
+            }
+        }
+
+        function toggleHUD(visible) {
+            hudVisible = visible;
+            const hudContainer = document.getElementById('hudContainer');
+            hudContainer.style.display = visible ? 'block' : 'none';
+        }
+
+        function updatePanelVisibility() {
+            const statusPanel = document.getElementById('statusPanel');
+            const environmentPanel = document.getElementById('environmentPanel');
+            
+            statusPanel.style.display = (hudConfig.showSuspicion || hudConfig.showClearance) ? 'block' : 'none';
+            environmentPanel.style.display = hudConfig.showSecurityLevel ? 'block' : 'none';
+        }
+
+        function showEffect(effect, duration) {
+            const effectOverlay = document.getElementById('effectOverlay');
+            effectOverlay.className = `effect-overlay ${effect}-effect`;
+            effectOverlay.classList.remove('hidden');
+            
+            setTimeout(() => {
+                effectOverlay.classList.add('hidden');
+                effectOverlay.className = 'effect-overlay hidden';
+            }, duration);
+        }
+
+        function showAlert(alertType, level, duration) {
+            const securityAlert = document.getElementById('securityAlert');
+            const alertMessage = document.getElementById('alertMessage');
+            
+            const messages = {
+                1: 'Routine security monitoring active',
+                2: 'Enhanced surveillance protocols engaged',
+                3: 'High security alert - remain vigilant',
+                4: 'MAXIMUM SECURITY - COMPLY IMMEDIATELY'
+            };
+            
+            alertMessage.textContent = messages[level] || 'Security status updated';
+            securityAlert.classList.remove('hidden');
+            securityAlert.classList.add('fade-in');
+            
+            setTimeout(() => {
+                securityAlert.classList.add('fade-out');
+                setTimeout(() => {
+                    securityAlert.classList.add('hidden');
+                    securityAlert.classList.remove('fade-in', 'fade-out');
+                }, 500);
+            }, duration - 500);
+        }
+
+        function showBroadcast(message, duration) {
+            const resistanceBroadcast = document.getElementById('resistanceBroadcast');
+            const broadcastMessage = document.getElementById('broadcastMessage');
+            
+            broadcastMessage.textContent = message;
+            resistanceBroadcast.classList.remove('hidden');
+            
+            setTimeout(() => {
+                resistanceBroadcast.classList.add('fade-out');
+                setTimeout(() => {
+                    resistanceBroadcast.classList.add('hidden');
+                    resistanceBroadcast.classList.remove('fade-out');
+                }, 500);
+            }, duration - 500);
+        }
+
+        function getClearanceColor(level, darker = false) {
+            const colors = {
+                0: darker ? '#666' : '#999',
+                1: darker ? '#0066cc' : '#0080ff',
+                2: darker ? '#cc6600' : '#ff8000',
+                3: darker ? '#cc0066' : '#ff0080',
+                4: darker ? '#cc0000' : '#ff0000'
+            };
+            return colors[level] || colors[0];
+        }
+
+        function getSuspicionColor(level) {
+            if (level >= 75) return '#ff0000';
+            if (level >= 50) return '#ff8000';
+            if (level >= 25) return '#ffff00';
+            return '#00ff00';
+        }
+
+        function getSecurityIndicator(level) {
+            if (level >= 4) return 'status-red';
+            if (level >= 3) return 'status-orange';
+            if (level >= 2) return 'status-yellow';
+            return 'status-green';
+        }
+
+        // Update minimap info periodically
+        setInterval(() => {
+            const sectorInfo = document.getElementById('sectorInfo');
+            if (currentEnvironment.securityLevel) {
+                sectorInfo.innerHTML = `SEC LVL ${currentEnvironment.securityLevel}<br>ACTIVE`;
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

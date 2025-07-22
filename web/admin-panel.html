@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Country Road RP - Reckoning Admin Panel</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; color: #fff; }
+        .header { background: #2c3e50; padding: 1rem; border-bottom: 2px solid #3498db; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { color: #3498db; }
+        .header .search-box { display: flex; align-items: center; }
+        .header input { padding: 0.5rem; border: none; border-radius: 4px; background: #34495e; color: #fff; margin-right: 0.5rem; }
+        .header button { background: #3498db; color: white; border: none; padding: 0.5rem 1rem; cursor: pointer; border-radius: 4px; }
+        .nav { background: #34495e; padding: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .nav .tabs { display: flex; }
+        .nav button { background: #3498db; color: white; border: none; padding: 0.5rem 1rem; margin-right: 0.5rem; cursor: pointer; border-radius: 4px; }
+        .nav button:hover { background: #2980b9; }
+        .nav button.active { background: #e74c3c; }
+        .nav .realtime-indicator { display: flex; align-items: center; }
+        .nav .status-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 0.5rem; }
+        .nav .status-online { background: #27ae60; }
+        .nav .status-offline { background: #e74c3c; }
+        .container { display: flex; height: calc(100vh - 140px); }
+        .sidebar { width: 320px; background: #2c3e50; padding: 1rem; overflow-y: auto; }
+        .main { flex: 1; padding: 1rem; overflow-y: auto; }
+        .widget { background: #34495e; margin-bottom: 1rem; padding: 1rem; border-radius: 8px; border-left: 4px solid #3498db; position: relative; }
+        .widget h3 { color: #3498db; margin-bottom: 0.5rem; }
+        .widget-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .widget-controls { display: flex; gap: 0.25rem; }
+        .widget-controls button { background: #2c3e50; border: none; color: #95a5a6; padding: 0.25rem 0.5rem; border-radius: 3px; cursor: pointer; font-size: 0.8rem; }
+        .widget-controls button:hover { background: #34495e; color: #fff; }
+        .widget-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }
+        .stat-item { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #4a5568; }
+        .stat-item:last-child { border-bottom: none; }
+        .stat-value { font-weight: bold; color: #3498db; }
+        .progress-bar { width: 100%; height: 6px; background: #2c3e50; border-radius: 3px; margin-top: 0.25rem; }
+        .progress-fill { height: 100%; background: #3498db; border-radius: 3px; transition: width 0.3s ease; }
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #4a5568; }
+        .table th { background: #2c3e50; color: #3498db; position: sticky; top: 0; }
+        .table tr:hover { background: #3a4a5c; }
+        .table .clickable { cursor: pointer; }
+        .alert { padding: 0.75rem; margin: 0.5rem 0; border-radius: 4px; border-left: 4px solid; }
+        .alert-danger { background: rgba(192, 57, 43, 0.2); border-color: #c0392b; }
+        .alert-warning { background: rgba(230, 126, 34, 0.2); border-color: #e67e22; }
+        .alert-info { background: rgba(52, 152, 219, 0.2); border-color: #3498db; }
+        .alert-success { background: rgba(39, 174, 96, 0.2); border-color: #27ae60; }
+        .severity-critical { color: #e74c3c; font-weight: bold; }
+        .severity-alert { color: #f39c12; }
+        .severity-warning { color: #f1c40f; }
+        .severity-info { color: #3498db; }
+        .status-online { color: #27ae60; }
+        .status-offline { color: #e74c3c; }
+        .loading { text-align: center; padding: 2rem; color: #95a5a6; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { background: #34495e; margin: 5% auto; padding: 2rem; width: 80%; max-width: 600px; border-radius: 8px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .modal-header h3 { color: #3498db; }
+        .close { cursor: pointer; font-size: 1.5rem; color: #95a5a6; }
+        .close:hover { color: #fff; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; color: #bdc3c7; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.5rem; border: none; border-radius: 4px; background: #2c3e50; color: #fff; }
+        .btn { background: #3498db; color: white; border: none; padding: 0.5rem 1rem; cursor: pointer; border-radius: 4px; margin-right: 0.5rem; }
+        .btn:hover { background: #2980b9; }
+        .btn-danger { background: #e74c3c; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-success { background: #27ae60; }
+        .btn-success:hover { background: #229954; }
+        .chart-container { position: relative; height: 300px; margin: 1rem 0; }
+        .filters { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; }
+        .filters select, .filters input { padding: 0.4rem; background: #34495e; border: none; color: #fff; border-radius: 4px; }
+        .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1rem; }
+        .pagination button { background: #34495e; border: none; color: #fff; padding: 0.5rem 0.75rem; cursor: pointer; border-radius: 4px; }
+        .pagination button:hover { background: #4a5568; }
+        .pagination button.active { background: #3498db; }
+        .notification { position: fixed; top: 20px; right: 20px; background: #2c3e50; border: 1px solid #3498db; border-radius: 4px; padding: 1rem; max-width: 300px; z-index: 1001; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>🎭 Country Road RP - Season 1: Reckoning</h1>
+            <p>Administrative Control Panel</p>
+        </div>
+        <div class="search-box">
+            <input type="text" id="global-search" placeholder="Search players, events..." onkeypress="handleSearchKeypress(event)">
+            <button onclick="performGlobalSearch()">🔍</button>
+        </div>
+    </div>
+    
+    <div class="nav">
+        <div class="tabs">
+            <button onclick="showTab('dashboard')" class="active" id="tab-dashboard">Dashboard</button>
+            <button onclick="showTab('players')" id="tab-players">Players</button>
+            <button onclick="showTab('security')" id="tab-security">Security Events</button>
+            <button onclick="showTab('tunnels')" id="tab-tunnels">Tunnel Activity</button>
+            <button onclick="showTab('resistance')" id="tab-resistance">Resistance</button>
+            <button onclick="showTab('propaganda')" id="tab-propaganda">Propaganda</button>
+            <button onclick="showTab('milestones')" id="tab-milestones">Milestones</button>
+        </div>
+        <div class="realtime-indicator">
+            <div class="status-dot status-online" id="connection-status"></div>
+            <span id="connection-text">Connected</span>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="widget">
+                <div class="widget-header">
+                    <h3>Server Status</h3>
+                    <div class="widget-controls">
+                        <button onclick="toggleWidget('server-status')">📌</button>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <span>Status:</span>
+                    <span class="stat-value status-online" id="server-status-text">Online</span>
+                </div>
+                <div class="stat-item">
+                    <span>Players:</span>
+                    <span class="stat-value" id="player-count">Loading...</span>
+                </div>
+                <div class="stat-item">
+                    <span>Active Events:</span>
+                    <span class="stat-value" id="active-events">Loading...</span>
+                </div>
+                <div class="stat-item">
+                    <span>Uptime:</span>
+                    <span class="stat-value" id="server-uptime">Loading...</span>
+                </div>
+                <div class="stat-item">
+                    <span>CPU Usage:</span>
+                    <span class="stat-value" id="cpu-usage">--</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="cpu-progress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="widget">
+                <div class="widget-header">
+                    <h3>Real-time Activity</h3>
+                    <div class="widget-controls">
+                        <button onclick="toggleAutoRefresh()" id="auto-refresh-btn">⏸️</button>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <span>Recent Events (5m):</span>
+                    <span class="stat-value" id="recent-activity">--</span>
+                </div>
+                <div class="stat-item">
+                    <span>Tunnel Access:</span>
+                    <span class="stat-value" id="tunnel-activity">--</span>
+                </div>
+                <div class="stat-item">
+                    <span>Security Alerts:</span>
+                    <span class="stat-value" id="security-alerts">--</span>
+                </div>
+            </div>
+            
+            <div class="widget">
+                <h3>Quick Actions</h3>
+                <button onclick="showModal('emergency-broadcast')" class="btn btn-danger" style="width: 100%; margin: 0.25rem 0;">📢 Emergency Broadcast</button>
+                <button onclick="triggerEvent('ghost_division')" class="btn btn-danger" style="width: 100%; margin: 0.25rem 0;">👻 Deploy Ghost Division</button>
+                <button onclick="showModal('lockdown-zone')" class="btn" style="width: 100%; margin: 0.25rem 0; background: #f39c12;">🔒 Lockdown Zone</button>
+                <button onclick="triggerEvent('increase_security')" class="btn" style="width: 100%; margin: 0.25rem 0;">🛡️ Increase Security</button>
+                <button onclick="refreshData()" class="btn" style="width: 100%; margin: 0.25rem 0;">🔄 Refresh Data</button>
+                <button onclick="showModal('export-data')" class="btn" style="width: 100%; margin: 0.25rem 0;">📋 Export Data</button>
+            </div>
+            
+            <div class="widget">
+                <h3>Recent Alerts</h3>
+                <div id="recent-alerts">
+                    <div class="loading">Loading alerts...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main">
+            <div id="dashboard-content" class="tab-content">
+                <div class="loading">Loading dashboard data...</div>
+            </div>
+            
+            <div id="players-content" class="tab-content" style="display: none;">
+                <div class="loading">Loading player data...</div>
+            </div>
+            
+            <div id="security-content" class="tab-content" style="display: none;">
+                <div class="loading">Loading security events...</div>
+            </div>
+            
+            <div id="tunnels-content" class="tab-content" style="display: none;">
+                <div class="loading">Loading tunnel activity...</div>
+            </div>
+            
+            <div id="resistance-content" class="tab-content" style="display: none;">
+                <div class="loading">Loading resistance activity...</div>
+            </div>
+            
+            <div id="propaganda-content" class="tab-content" style="display: none;">
+                <div class="loading">Loading propaganda data...</div>
+            </div>
+            
+            <div id="milestones-content" class="tab-content" style="display: none;">
+                <div class="loading">Loading milestone data...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="emergency-broadcast-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Emergency Broadcast</h3>
+                <span class="close" onclick="closeModal('emergency-broadcast-modal')">&times;</span>
+            </div>
+            <div class="form-group">
+                <label for="broadcast-message">Message:</label>
+                <textarea id="broadcast-message" rows="4" placeholder="Enter emergency message..."></textarea>
+            </div>
+            <button onclick="sendEmergencyBroadcast()" class="btn btn-danger">Send Broadcast</button>
+            <button onclick="closeModal('emergency-broadcast-modal')" class="btn">Cancel</button>
+        </div>
+    </div>
+
+    <div id="lockdown-zone-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Zone Lockdown</h3>
+                <span class="close" onclick="closeModal('lockdown-zone-modal')">&times;</span>
+            </div>
+            <div class="form-group">
+                <label for="lockdown-x">X Coordinate:</label>
+                <input type="number" id="lockdown-x" placeholder="X position">
+            </div>
+            <div class="form-group">
+                <label for="lockdown-y">Y Coordinate:</label>
+                <input type="number" id="lockdown-y" placeholder="Y position">
+            </div>
+            <div class="form-group">
+                <label for="lockdown-z">Z Coordinate:</label>
+                <input type="number" id="lockdown-z" placeholder="Z position">
+            </div>
+            <button onclick="activateLockdown()" class="btn btn-danger">Activate Lockdown</button>
+            <button onclick="closeModal('lockdown-zone-modal')" class="btn">Cancel</button>
+        </div>
+    </div>
+
+    <div id="player-details-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="player-details-title">Player Details</h3>
+                <span class="close" onclick="closeModal('player-details-modal')">&times;</span>
+            </div>
+            <div id="player-details-content">
+                <div class="loading">Loading player details...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="export-data-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Export Data</h3>
+                <span class="close" onclick="closeModal('export-data-modal')">&times;</span>
+            </div>
+            <div class="form-group">
+                <label for="export-type">Data Type:</label>
+                <select id="export-type">
+                    <option value="security_logs">Security Logs (30 days)</option>
+                    <option value="player_profiles">Player Profiles</option>
+                    <option value="tunnel_access">Tunnel Access Logs</option>
+                    <option value="blackline_events">Blackline Events</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="export-format">Format:</label>
+                <select id="export-format">
+                    <option value="json">JSON</option>
+                    <option value="csv">CSV</option>
+                </select>
+            </div>
+            <button onclick="exportData()" class="btn btn-success">Export</button>
+            <button onclick="closeModal('export-data-modal')" class="btn">Cancel</button>
+        </div>
+    </div>
+
+    <script src="js/admin-panel.js"></script>
+</body>
+</html>

@@ -219,10 +219,10 @@ Config.Discord = {
     
     -- Webhook URLs (set these in your server)
     webhooks = {
-        general = '', -- General events
-        security = '', -- Security alerts, breaches
-        resistance = '', -- Resistance activities
-        admin = '' -- Admin notifications, milestones
+        general = 'https://discord.com/api/webhooks/1370940576878428191/H1Hmff87FVESKXr_7z5WyPkUWrZkjHSZb88r7DHl1P40wDeP_IlCDF9cDzjuudtHWrQq', -- General events
+        security = 'https://discord.com/api/webhooks/1370940576878428191/H1Hmff87FVESKXr_7z5WyPkUWrZkjHSZb88r7DHl1P40wDeP_IlCDF9cDzjuudtHWrQq', -- Security alerts, breaches
+        resistance = 'https://discord.com/api/webhooks/1370940576878428191/H1Hmff87FVESKXr_7z5WyPkUWrZkjHSZb88r7DHl1P40wDeP_IlCDF9cDzjuudtHWrQq', -- Resistance activities
+        admin = 'https://discord.com/api/webhooks/1370940576878428191/H1Hmff87FVESKXr_7z5WyPkUWrZkjHSZb88r7DHl1P40wDeP_IlCDF9cDzjuudtHWrQq' -- Admin notifications, milestones
     },
     
     -- Color codes for Discord embeds

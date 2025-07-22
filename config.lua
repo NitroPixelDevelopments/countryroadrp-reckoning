@@ -31,7 +31,7 @@ Config.TunnelSystem = {
     -- Access control
     accessJobs = {'merryweather', 'northbridge'},
     accessRanks = {
-        merryweather = {'operative', 'agent', 'commander'},
+        merryweather = {'Unvetted Contractor', 'Tier 1 Operative', 'Tier 2 Operative','Field Agent','Recon Specialist','Blackline Enforcer','Tactical Unit Lead','Zone Commander','Asset Containment Officer', 'Ghost Division Commander', 'Northbridge Protocol Officer', 'Executive Agent – TRENCHGLASS'},
         northbridge = {'analyst', 'executive', 'director'}
     }
 }

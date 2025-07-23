@@ -100,5 +100,18 @@ All notable changes to Country Road RP - Season 1: Reckoning will be documented 
 - Advanced roleplay tools (disguises, memory implants)
 
 ---
+### 1.3.0 AI relase
+We’re introducing a daily evolving world logic system to CRRP’s server core. This module allows the game world to shift each day based on narrative progression, without requiring admin input.
+
+📌 Core Functionality:
+	•	🔁 Automated World Progression based on story arc (INIT → OP_BLACKLINE → LOCKDOWN)
+	•	🛰️ Northbridge Propaganda Broadcasts: Daily-generated safety notices, curfews, and misinformation spread across terminals and text files
+	•	📻 Resistance Radio Drops: Secret messages, meeting points, and encoded broadcasts accessible to those listening
+	•	🧠 AI-driven future roadmap for generating new broadcasts dynamically and adjusting world logic in response to player decisions
+
+🧪 Dev Notes:
+	•	JSON state stored internally, rotated per server restart/day
+	•	FiveM-native file operations (using LoadResourceFile & SaveResourceFile)
+	•	Modular system built for easy expansion (e.g., faction-specific events, fake intel drops, player-impact triggers)
 
 *For detailed information about each update, see the commit history and documentation.*

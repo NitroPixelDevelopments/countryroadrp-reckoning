@@ -10,12 +10,12 @@ Config.TunnelSystem = {
     
     -- Main tunnel route coordinates (East Vinewood to Blaine County)
     tunnelPoints = {
-        {coords = vector3(1210.5, -620.8, 63.0), radius = 50.0}, -- East Vinewood entrance
-        {coords = vector3(1450.2, -890.4, 45.2), radius = 35.0}, -- Underground section 1
-        {coords = vector3(1680.8, -1200.6, 38.8), radius = 35.0}, -- Underground section 2
-        {coords = vector3(1920.4, -1450.2, 42.1), radius = 35.0}, -- Underground section 3
-        {coords = vector3(2200.1, -1680.9, 48.5), radius = 35.0}, -- Underground section 4
-        {coords = vector3(2480.7, -1920.3, 55.2), radius = 40.0}, -- Blaine County exit
+        {coords = vector3(545.25, 522.65, 106.26), radius = 50.0}, -- MW ENTRANCE
+        {coords = vector3(771.99, 733.42, 105.73), radius = 50.0}, -- TRENCHGLASS Alpha Office 1
+        {coords = vector3(1270.67, 992.49, 105.92), radius = 35.0}, -- Mt HAANRD 5024
+        {coords = vector3(442.06, 2378.47, 47.23), radius = 35.0}, -- Grand Senora Desert entrance
+        {coords = vector3(442.98, 369.62, 105.74), radius = 35.0}, -- Downtown Vinewood 7093
+
     },
     
     -- Environmental effects
@@ -41,7 +41,7 @@ Config.BlacklineEvents = {
     enabled = true,
     
     -- Event frequency (minutes)
-    eventInterval = {min = 15, max = 45},
+    eventInterval = {min = 5, max = 5},
     
     -- Event types and their chances
     eventTypes = {
@@ -102,7 +102,7 @@ Config.NorthbridgePropaganda = {
     enabled = true,
     
     -- Announcement frequency (minutes)
-    announcementInterval = {min = 30, max = 90},
+    announcementInterval = {min = 3, max = 9},
     
     -- Public announcement messages (corporate propaganda)
     publicAnnouncements = {
